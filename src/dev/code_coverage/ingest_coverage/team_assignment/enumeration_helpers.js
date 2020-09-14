@@ -21,6 +21,7 @@ import { statSync } from 'fs';
 import isGlob from 'is-glob';
 import glob from 'glob';
 import { left, right, tryCatch } from '../either';
+import { pipe } from '../utils';
 
 export const push = (xs) => (x) => xs.push(x);
 export const pathExists = (x) => tryCatch(() => statSync(x)).fold(left, right);
@@ -44,3 +45,11 @@ export const tryPath = (x) => {
 };
 export const dropEmpty = (x) => x.length > 0;
 export const notFound = (log) => (err) => log.error(`\n!!! Not Found: \n${err}`);
+export const encoding = 'utf8';
+const appendUtf8 = { flag: 'a', encoding };
+const flushNotFound = (fileWrite) => (nf) => {
+  fileWrite(`${nf}\n`, appendUtf8);
+  return nf;
+};
+export const collectAndLogNotFound = (fileWrite) => (log) =>
+  pipe(flushNotFound(fileWrite), notFound(log));
